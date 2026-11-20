@@ -101,9 +101,18 @@ export function SearchOverlay() {
                       {PRODUCT_TYPE_LABELS[product.type]}
                     </p>
                   </div>
-                  <p className="shrink-0 text-sm font-bold text-foreground">
-                    {formatBRL(product.price)}
-                  </p>
+                  <div className="shrink-0 text-right">
+                    {product.originalPrice ? (
+                      <p className="text-[0.7rem] font-semibold text-muted-foreground line-through">
+                        {formatBRL(product.originalPrice)}
+                      </p>
+                    ) : null}
+                    <p
+                      className={`text-sm font-bold ${product.originalPrice ? "text-hotpink" : "text-foreground"}`}
+                    >
+                      {formatBRL(product.price)}
+                    </p>
+                  </div>
                 </button>
               ))}
             </div>

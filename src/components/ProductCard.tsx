@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type TouchEvent } from "react";
 import { cn } from "@/lib/utils";
-import { SIZES, formatBRL, type Product, type SizeOption } from "@/data/products";
+import { SIZES, formatBRL, promoPercent, type Product, type SizeOption } from "@/data/products";
 import { useSiteUI } from "@/lib/site-ui";
 
 const NO_STONE = "Nenhuma";
@@ -144,6 +144,11 @@ export function ProductCard({ product }: ProductCardProps) {
             Foto em breve
           </div>
         )}
+        {product.originalPrice ? (
+          <span className="absolute top-3 right-3 z-10 rounded-sm bg-foreground px-2 py-1 text-[0.6rem] font-extrabold tracking-wide text-background">
+            -{promoPercent(product)}%
+          </span>
+        ) : null}
         {product.badge ? (
           <span className="absolute top-3 left-3 rounded-sm bg-hotpink px-2 py-1 text-[0.6rem] font-bold tracking-wide text-hotpink-foreground uppercase">
             {product.badge}
@@ -180,7 +185,17 @@ export function ProductCard({ product }: ProductCardProps) {
           <p className="mt-0.5 text-[0.65rem] font-bold tracking-wide text-brandblue uppercase sm:mt-1 sm:text-sm">
             {isBiquini ? `Cor: ${product.color}` : product.color}
           </p>
-          <p className="mt-1.5 text-base font-bold text-foreground sm:mt-2 sm:text-xl">
+          {product.originalPrice ? (
+            <p className="mt-1.5 text-[0.7rem] font-semibold text-muted-foreground line-through decoration-hotpink/70 sm:mt-2 sm:text-sm">
+              {formatBRL(product.originalPrice)}
+            </p>
+          ) : null}
+          <p
+            className={cn(
+              "text-base font-bold sm:text-xl",
+              product.originalPrice ? "text-hotpink" : "mt-1.5 text-foreground sm:mt-2",
+            )}
+          >
             {formatBRL(product.price)}
           </p>
           {product.installments > 1 ? (

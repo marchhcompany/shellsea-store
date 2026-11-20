@@ -1,3 +1,6 @@
+import { COUPON_ENABLED } from "@/lib/coupon";
+import { PROMO, isPromoLive } from "@/lib/promo";
+
 const NAV_LINKS = [
   { label: "Início", href: "#inicio" },
   { label: "Monte seu Conjunto", href: "#vitrine" },
@@ -13,8 +16,11 @@ const SUPPORT_ITEMS = [
 const PAYMENT_ITEMS = [
   { label: "💳 Em até 3x Sem Juros" },
   { label: "⚡ 4% OFF no Pix" },
-  { label: "🏷️ 10% OFF Primeira Compra (Cupom: MAR DE CONCHAS)" },
-] as const;
+  ...(isPromoLive()
+    ? [{ label: `🏷️ ${PROMO.label} em todos os biquínis até ${PROMO.endsLabel}` }]
+    : []),
+  ...(COUPON_ENABLED ? [{ label: "🏷️ 10% OFF Primeira Compra (Cupom: MAR DE CONCHAS)" }] : []),
+];
 
 const linkClass =
   "inline-block text-sm text-white/70 transition-all duration-200 hover:translate-x-0.5 hover:text-white";

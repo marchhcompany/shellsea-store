@@ -1,6 +1,12 @@
+import { COUPON_ENABLED } from "@/lib/coupon";
+import { PROMO, isPromoLive } from "@/lib/promo";
+
+const PROMO_MESSAGE = `🌊 ${PROMO.label} EM TODOS OS BIQUÍNIS · SÓ ATÉ ${PROMO.endsLabel.toUpperCase()}`;
+
 const MESSAGES = [
+  ...(isPromoLive() ? [PROMO_MESSAGE] : []),
   "NA COMPRA DE 1 BIQUÍNI, GANHE UMA PEDRA OU PINGENTE PARA PERSONALIZAR",
-  'RESGATE SEU CUPOM "MARDECONCHAS" PARA 10% OFF NA PRIMEIRA COMPRA',
+  ...(COUPON_ENABLED ? ['RESGATE SEU CUPOM "MARDECONCHAS" PARA 10% OFF NA PRIMEIRA COMPRA'] : []),
   "PARCELE EM ATÉ 3X SEM JUROS",
 ];
 

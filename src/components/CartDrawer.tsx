@@ -1,6 +1,16 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, MapPin, Minus, Pencil, Plus, ShieldCheck, ShoppingBag, Store, X } from "lucide-react";
+import {
+  ChevronLeft,
+  MapPin,
+  Minus,
+  Pencil,
+  Plus,
+  ShieldCheck,
+  ShoppingBag,
+  Store,
+  X,
+} from "lucide-react";
 import { EASE_OUT } from "@/lib/motion";
 import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
 import { useSiteUI } from "@/lib/site-ui";
@@ -13,10 +23,12 @@ import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import {
   COUPON_CODE,
   COUPON_DISCOUNT,
+  COUPON_ENABLED,
   hasUsedFirstPurchaseCoupon,
   isCouponCodeValid,
   markFirstPurchaseCouponUsed,
 } from "@/lib/coupon";
+import { PROMO } from "@/lib/promo";
 
 type CouponStatus = "idle" | "invalid" | "used" | "applied";
 type Step = "cart" | "checkout";
@@ -61,11 +73,7 @@ const EMPTY_FORM: CheckoutFormValues = {
 };
 
 function normalizeText(value: string): string {
-  return value
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .trim();
+  return value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 }
 
 function matchZone(zones: DeliveryZone[], neighborhood: string): DeliveryZone | undefined {
@@ -73,27 +81,31 @@ function matchZone(zones: DeliveryZone[], neighborhood: string): DeliveryZone | 
   const target = normalizeText(neighborhood);
   return (
     zones.find((z) => normalizeText(z.bairro) === target) ??
-    zones.find((z) => normalizeText(z.bairro).includes(target) || target.includes(normalizeText(z.bairro)))
+    zones.find(
+      (z) => normalizeText(z.bairro).includes(target) || target.includes(normalizeText(z.bairro)),
+    )
   );
 }
 
 function formatPhoneDisplay(phone: string): string {
   const digits = phone.replace(/\D/g, "");
-  if (digits.length === 11) return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-  if (digits.length === 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  if (digits.length === 11)
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  if (digits.length === 10)
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
   return phone;
 }
 
 function isProfileAddressComplete(form: CheckoutFormValues): boolean {
   return Boolean(
     form.name &&
-      form.phone &&
-      form.zip &&
-      form.street &&
-      form.number &&
-      form.neighborhoodText &&
-      form.city &&
-      form.state,
+    form.phone &&
+    form.zip &&
+    form.street &&
+    form.number &&
+    form.neighborhoodText &&
+    form.city &&
+    form.state,
   );
 }
 
@@ -163,7 +175,11 @@ export function CartDrawer() {
   }, [editingAddress, matchedZone, deliveryMode]);
 
   const isPickup = deliveryMode === "pickup";
-  const shippingCost = isPickup ? 0 : deliveryMode === "address" && matchedZone ? matchedZone.taxa : 0;
+  const shippingCost = isPickup
+    ? 0
+    : deliveryMode === "address" && matchedZone
+      ? matchedZone.taxa
+      : 0;
   const pickupWhatsappUrl = `https://api.whatsapp.com/send?phone=${STORE_WHATSAPP}&text=${encodeURIComponent(
     "Olá! Gostaria de combinar a retirada do meu pedido na SheLL Sea",
   )}`;
@@ -192,6 +208,14 @@ export function CartDrawer() {
     .reduce((sum, price) => sum + price, 0);
 
   const subtotal = cartLines.reduce((sum, line) => sum + line.product.price * line.qty, 0);
+  const promoSavings = cartLines.reduce(
+    (sum, line) =>
+      sum +
+      (line.product.originalPrice
+        ? (line.product.originalPrice - line.product.price) * line.qty
+        : 0),
+    0,
+  );
   const afterFreebies = subtotal - freeAccessoryDiscount;
   const couponDiscount = couponApplied ? afterFreebies * COUPON_DISCOUNT : 0;
   const total = afterFreebies - couponDiscount;
@@ -434,9 +458,18 @@ export function CartDrawer() {
                                   <Plus className="h-3 w-3" />
                                 </button>
                               </div>
-                              <p className="text-sm font-bold text-foreground">
-                                {formatBRL(line.product.price * line.qty)}
-                              </p>
+                              <div className="text-right">
+                                {line.product.originalPrice ? (
+                                  <p className="text-[0.7rem] font-semibold text-muted-foreground line-through">
+                                    {formatBRL(line.product.originalPrice * line.qty)}
+                                  </p>
+                                ) : null}
+                                <p
+                                  className={`text-sm font-bold ${line.product.originalPrice ? "text-hotpink" : "text-foreground"}`}
+                                >
+                                  {formatBRL(line.product.price * line.qty)}
+                                </p>
+                              </div>
                             </div>
                           </div>
                           <button
@@ -455,38 +488,53 @@ export function CartDrawer() {
 
                 {cartLines.length > 0 ? (
                   <div className="space-y-3 border-t border-border px-5 py-4">
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        placeholder="Cupom de desconto"
-                        value={coupon}
-                        onChange={(event) => {
-                          setCoupon(event.target.value);
-                          setCouponApplied(false);
-                          setCouponStatus("idle");
-                        }}
-                        className="w-full min-w-0 rounded-sm border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-1 focus:ring-ring focus:outline-none"
-                      />
-                      <button
-                        type="button"
-                        onClick={applyCoupon}
-                        className="shrink-0 rounded-sm border border-border px-3 py-2 text-xs font-bold text-foreground uppercase hover:bg-muted"
-                      >
-                        Aplicar
-                      </button>
-                    </div>
-                    {couponStatus === "invalid" ? (
-                      <p className="text-xs font-semibold text-destructive">Cupom inválido.</p>
-                    ) : null}
-                    {couponStatus === "used" ? (
-                      <p className="text-xs font-semibold text-destructive">
-                        Este cupom já foi utilizado. Válido apenas na primeira compra.
-                      </p>
+                    {COUPON_ENABLED ? (
+                      <>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="Cupom de desconto"
+                            value={coupon}
+                            onChange={(event) => {
+                              setCoupon(event.target.value);
+                              setCouponApplied(false);
+                              setCouponStatus("idle");
+                            }}
+                            className="w-full min-w-0 rounded-sm border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-1 focus:ring-ring focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={applyCoupon}
+                            className="shrink-0 rounded-sm border border-border px-3 py-2 text-xs font-bold text-foreground uppercase hover:bg-muted"
+                          >
+                            Aplicar
+                          </button>
+                        </div>
+                        {couponStatus === "invalid" ? (
+                          <p className="text-xs font-semibold text-destructive">Cupom inválido.</p>
+                        ) : null}
+                        {couponStatus === "used" ? (
+                          <p className="text-xs font-semibold text-destructive">
+                            Este cupom já foi utilizado. Válido apenas na primeira compra.
+                          </p>
+                        ) : null}
+                      </>
                     ) : null}
                     {couponStatus === "applied" ? (
                       <p className="text-xs font-semibold text-pix">
                         Cupom {COUPON_CODE} aplicado! (-10%) · -{formatBRL(couponDiscount)}
                       </p>
+                    ) : null}
+
+                    {promoSavings > 0 ? (
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-semibold text-hotpink">
+                          {PROMO.label} nos biquínis
+                        </span>
+                        <span className="font-semibold text-hotpink">
+                          -{formatBRL(promoSavings)}
+                        </span>
+                      </div>
                     ) : null}
 
                     {freeAccessories > 0 ? (
@@ -737,7 +785,11 @@ export function CartDrawer() {
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">Taxa de entrega</span>
                       <span className="text-foreground">
-                        {isPickup ? "Retirada" : shippingCost > 0 ? formatBRL(shippingCost) : "Grátis"}
+                        {isPickup
+                          ? "Retirada"
+                          : shippingCost > 0
+                            ? formatBRL(shippingCost)
+                            : "Grátis"}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
@@ -765,7 +817,9 @@ export function CartDrawer() {
                       disabled={submitting}
                       className="w-full rounded-full bg-primary px-6 py-3 text-sm font-bold tracking-[0.05em] text-primary-foreground uppercase transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      {submitting ? "Processando..." : `Ir para Pagamento (${formatBRL(grandTotal)})`}
+                      {submitting
+                        ? "Processando..."
+                        : `Ir para Pagamento (${formatBRL(grandTotal)})`}
                     </button>
                   </div>
                 ) : null}

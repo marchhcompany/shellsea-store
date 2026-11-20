@@ -6,7 +6,7 @@ import { CategoryShowcase } from "@/components/CategoryShowcase";
 import { AboutSection } from "@/components/AboutSection";
 import { SiteFooter } from "@/components/SiteFooter";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
-import { DiscountPopup } from "@/components/DiscountPopup";
+import { PromoPopup } from "@/components/PromoPopup";
 import { CatalogOverlay } from "@/components/CatalogOverlay";
 import { CartDrawer } from "@/components/CartDrawer";
 import { AuthModal } from "@/components/AuthModal";
@@ -55,7 +55,7 @@ function Index() {
       </main>
       <SiteFooter />
       <WhatsAppButton />
-      <DiscountPopup />
+      <PromoPopup />
       <CatalogOverlay />
       <CartDrawer />
       <AuthModal />

@@ -1,5 +1,9 @@
 export const COUPON_CODE = "MARDECONCHAS";
 export const COUPON_DISCOUNT = 0.1;
+/** Paused while the site-wide 20% OFF biquíni promo runs (see `src/lib/promo.ts`),
+ * so the discounts never stack. Flip back to `true` to restore the coupon: the
+ * cart field reappears and the server starts honoring the code again. */
+export const COUPON_ENABLED = false;
 
 /** Set by DiscountPopup once the customer finishes the signup form — used only
  * to avoid re-showing that popup in this browser. Not a coupon requirement. */
@@ -13,16 +17,11 @@ const COUPON_USED_STORAGE_KEY = "shellsea_first_purchase_coupon_used";
  * (CartDrawer) and the server (checkout.server.ts) so they never disagree.
  */
 export function normalizeCouponCode(code: string): string {
-  return code
-    .trim()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/\s+/g, "")
-    .toUpperCase();
+  return code.trim().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, "").toUpperCase();
 }
 
 export function isCouponCodeValid(code: string): boolean {
-  return normalizeCouponCode(code) === COUPON_CODE;
+  return COUPON_ENABLED && normalizeCouponCode(code) === COUPON_CODE;
 }
 
 /** The coupon is valid on the customer's first purchase only. */

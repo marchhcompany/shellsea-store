@@ -29,6 +29,7 @@ import pedraMiniLaranja from "@/assets/products/pedra-mini-laranja.jpg";
 import pedraMiniVerdeMenta from "@/assets/products/pedra-mini-verde-menta.jpg";
 import pedraAmbar from "@/assets/products/pedra-ambar.jpg";
 import pedraMiniAmbar from "@/assets/products/pedra-mini-ambar.jpg";
+import { BIQUINI_FULL_PRICE, PROMO, applyPromo } from "@/lib/promo";
 
 export type SizeOption = "P" | "M" | "G";
 
@@ -52,6 +53,8 @@ export interface Product {
   /** Small badge shown over the photo, e.g. the collection name. */
   badge?: string;
   price: number;
+  /** Regular price, shown crossed out while a promotion lowers `price`. */
+  originalPrice?: number;
   installments: number;
   /** Front-facing product photo. Empty while the catalog photos are pending. */
   frontImage?: string;
@@ -60,19 +63,21 @@ export interface Product {
 }
 
 const BASE = {
-  type: "biquini",
+  type: "biquini" as const,
   model: "Biquíni Maré",
   badge: "MARÉ",
-  price: 79.9,
+  price: applyPromo(BIQUINI_FULL_PRICE),
+  ...(PROMO.active ? { originalPrice: BIQUINI_FULL_PRICE } : {}),
   installments: 3,
-} as const;
+};
 const ORLA_BASE = {
-  type: "biquini",
+  type: "biquini" as const,
   model: "Biquíni Orla",
   badge: "ORLA",
-  price: 79.9,
+  price: applyPromo(BIQUINI_FULL_PRICE),
+  ...(PROMO.active ? { originalPrice: BIQUINI_FULL_PRICE } : {}),
   installments: 3,
-} as const;
+};
 const PINGENTE_BASE = {
   type: "pingente",
   model: "Pingente",
@@ -245,4 +250,10 @@ export function formatBRL(value: number): string {
     currency: "BRL",
     minimumFractionDigits: 2,
   });
+}
+
+/** Whole-number discount percentage for a product on promo (e.g. 20), or 0. */
+export function promoPercent(product: Pick<Product, "price" | "originalPrice">): number {
+  if (!product.originalPrice || product.originalPrice <= product.price) return 0;
+  return Math.round((1 - product.price / product.originalPrice) * 100);
 }

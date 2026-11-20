@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 import { EASE_OUT } from "@/lib/motion";
 import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
 import { useSiteUI } from "@/lib/site-ui";
-import { SIZES, formatBRL, type SizeOption } from "@/data/products";
+import { SIZES, formatBRL, promoPercent, type SizeOption } from "@/data/products";
 
 const NO_STONE = "Nenhuma";
 const NO_PENDANT = "Nenhum";
@@ -87,7 +87,21 @@ export function ProductQuickView() {
               <p className="mt-1 text-sm font-bold tracking-wide text-brandblue uppercase">
                 {isBiquini ? `Cor: ${product.color}` : product.color}
               </p>
-              <p className="mt-3 text-2xl font-bold text-foreground sm:text-3xl">
+              {product.originalPrice ? (
+                <div className="mt-3 flex items-center gap-2">
+                  <span className="text-sm font-semibold text-muted-foreground line-through decoration-hotpink/70 sm:text-base">
+                    {formatBRL(product.originalPrice)}
+                  </span>
+                  <span className="rounded-sm bg-hotpink px-1.5 py-0.5 text-[0.65rem] font-extrabold tracking-wide text-hotpink-foreground">
+                    -{promoPercent(product)}%
+                  </span>
+                </div>
+              ) : null}
+              <p
+                className={`text-2xl font-bold sm:text-3xl ${
+                  product.originalPrice ? "text-hotpink" : "mt-3 text-foreground"
+                }`}
+              >
                 {formatBRL(product.price)}
               </p>
               {product.installments > 1 ? (
